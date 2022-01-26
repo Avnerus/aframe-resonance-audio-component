@@ -1,5 +1,5 @@
 /* global AFRAME, THREE, AudioContext */
-const { ResonanceAudio } = require('resonance-audio')
+const ResonanceAudio = require('resonance-audio').default;
 const { onceWhenLoaded, getBoundingBox } = require('./utils')
 
 const RESONANCE_MATERIAL = Object.keys(ResonanceAudio.Utils.ROOM_MATERIAL_COEFFICIENTS)

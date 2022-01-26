@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title><%= htmlWebpackPlugin.options.title %> - Usage with entities</title>
+<meta charset=utf-8 />
+<link rel="icon" sizes="192x192" href="https://aframe.io/images/aframe-logo-192.png">
+<script src="assets/aframe/aframe.min.js"></script>
+<%= htmlWebpackPlugin.tags.headTags %>
+<body>
+
+<header is="example-header" title="IOS Multiple buffers"></header>
+<main>
+<!-- EXAMPLE -->
+<a-scene embedded
+  resonance-audio-room="
+    visualize:true;
+    width:10;
+    height:10;
+    depth:10;
+    ambisonicOrder:1;
+    speedOfSound:343;
+    left:transparent;
+    right:transparent;
+    front:transparent;
+    back:transparent;
+    down:grass;
+    up:acoustic-ceiling-tiles">
+  <a-assets>
+    <audio class="alaska" id="alaska1-2" src="assets/static/audio/alaska1-2.m4a" preload="auto"></audio>
+    <audio class="alaska" id="alaska3-4" src="assets/static/audio/alaska3-4.m4a" preload="auto"></audio>
+  </a-assets>
+    <a-entity
+      resonance-audio-src="
+        src:#alaska1-2;
+        loop:true;
+        autoplay:true;
+        visualize:true"
+      docs-autolplay-helper>
+    </a-entity>
+  <a-sky color="#6EBAA7"></a-sky>
+</a-scene>
+<!-- / EXAMPLE -->
+</main>
+<footer is="docs-footer"/></footer>
+<a is="github-corner"></a>

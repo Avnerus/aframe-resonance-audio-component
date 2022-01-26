@@ -1,5 +1,8 @@
 /* global document, AFRAME, THREE, MediaStream, HTMLMediaElement */
-const { ResonanceAudio } = require('resonance-audio')
+import Omnitone from '../node_modules/omnitone/build/omnitone.esm.js';
+
+const ResonanceAudio = require('resonance-audio').default;
+
 const { isVec3Set, onceWhenLoaded } = require('./utils')
 
 const warn = AFRAME.utils.debug('components:resonance-audio-src:warn')
@@ -130,7 +133,7 @@ AFRAME.registerComponent('resonance-audio-src', {
    * Update the playback settings.
    */
   updatePlaybackSettings () {
-    if (!this.connected.element) { return }
+    if (!this.connected.element || this.sound instanceof NodeList) { return }
 
     // Update loop.
     if (this.data.loop) {
@@ -353,7 +356,7 @@ AFRAME.registerComponent('resonance-audio-src', {
    * @param {function} createSourceFn - the function that creates an AudioSourceNode based on the passed source
    * @returns {boolean} false if there was not source to connect
    */
-  connect (source, createSourceFn) {
+  async connect (source, createSourceFn) {
     // Don't connect a new source if there is none.
     if (!source) { return false }
 
@@ -361,7 +364,7 @@ AFRAME.registerComponent('resonance-audio-src', {
 
     // Create new source AudioNode if source object didn't have one yet.
     if (!this.mediaAudioSourceNodes.has(this.sound)) {
-      this.mediaAudioSourceNodes.set(this.sound, createSourceFn.call(this.room.audioContext, this.sound))
+      this.mediaAudioSourceNodes.set(this.sound, await createSourceFn.call(this.room.audioContext, this.sound))
     }
     // Get elemenent source AudioNode.
     this.mediaAudioSourceNodes.get(this.sound).connect(this.resonance.input)
@@ -369,12 +372,31 @@ AFRAME.registerComponent('resonance-audio-src', {
     return true
   },
 
+  async createBufferListSource(elements) {
+    console.log("Create buffer list source", elements, this);
+    const urls = Array.from(elements, e => e.src);
+    console.log("Processing URLS", urls, Omnitone.createBufferList);
+    const bufferList = await Omnitone.createBufferList(this, urls);
+    console.log("Buffer list", bufferList);
+    const contentBuffer = Omnitone.mergeBufferListByChannel(this, bufferList);
+    const contentBufferSource = this.createBufferSource();
+    contentBufferSource.buffer = contentBuffer;
+    contentBufferSource.loop = true;
+    contentBufferSource.start();
+    return contentBufferSource;
+  },
+
   /**
    * Connect a media element to this resonance-audio-src.
    * @param {HTMLMediaElement} el - the media element
    */
-  connectWithElement (el) {
-    this.connected.element = this.connect(el, this.room.audioContext.createMediaElementSource)
+  async connectWithElement (el) {
+    console.log("Connect with Element", el);
+    if (el instanceof NodeList) {
+      this.connected.element = await this.connect(el, this.createBufferListSource);
+    } else {
+      this.connected.element = this.connect(el, this.room.audioContext.createMediaElementSource)
+    }
 
     if (!this.connected.element) { return }
     // Warn when an element with a stream was connected.
@@ -384,7 +406,7 @@ AFRAME.registerComponent('resonance-audio-src', {
     // Apply playback settings.
     this.updatePlaybackSettings() // TODO this shouldn't be here
     // Play the audio.
-    if (this.sound.getAttribute('autoplay')) {
+    if (!this.sound instanceof NodeList && this.sound.getAttribute('autoplay')) {
       this.sound.play().then().catch(w => warn(w))
     }
   },
@@ -420,6 +442,7 @@ AFRAME.registerComponent('resonance-audio-src', {
    * @param {string|HTMLMediaElement|MediaStream|null} src
    */
   connectSrc (src) {
+    console.log("Connect src", src )
     const errorMsg = 'invalid src value. Must be element id string, resource string, HTMLMediaElement or MediaStream'
 
     this.disconnect()
@@ -428,16 +451,17 @@ AFRAME.registerComponent('resonance-audio-src', {
       // Do nothing, because we've already disconnected.
     } else if (src instanceof MediaStream) {
       this.connectWithStream(src)
-    } else if (src instanceof HTMLMediaElement) {
+    } else if (src instanceof HTMLMediaElement || src instanceof NodeList) {
       this.connectWithElement(src)
     } else if (typeof src === 'string') {
-      if (src.charAt(0) === '#') {
-        el = document.getElementById(src.substr(1))
+      if (document.querySelectorAll(src)) {
+        el = document.querySelectorAll(src);
       } else {
         el = this.defaultAudioEl
         el.setAttribute('src', src)
       }
       if (!el) { throw new TypeError(errorMsg) }
+      console.log("EL", el);
       this.connectWithElement(el)
     } else {
       throw new TypeError(errorMsg)

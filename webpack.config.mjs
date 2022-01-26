@@ -45,6 +45,7 @@ const docsmetaopts = {
 }
 
 const examples = [
+  'ios.html',
   'entities.html',
   'primitives.html',
   'primitives-with-multiple-sources.html',

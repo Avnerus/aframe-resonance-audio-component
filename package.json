@@ -46,7 +46,8 @@
     "postversion": "git push && git push --tags"
   },
   "dependencies": {
-    "resonance-audio": "^1.0.0"
+    "resonance-audio": "Avnerus/resonance-audio-web-sdk",
+    "omnitone": "^1.3.0"
   },
   "devDependencies": {
     "aframe": "1.2.0",

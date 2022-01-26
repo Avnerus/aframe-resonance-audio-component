@@ -67,7 +67,7 @@ if (typeof AFRAME !== 'undefined') {
     },
     onClick: function () {
       const src = this.el.components['resonance-audio-src']
-      if (src && src.sound.getAttribute('autoplay') && src.sound.currentTime === 0) {
+      if (src && !(src.sound instanceof NodeList) && src.sound.getAttribute('autoplay') && src.sound.currentTime === 0) {
         src.sound.play().then().catch(e => error(e))
       }
     },
